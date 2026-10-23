@@ -15,6 +15,7 @@ build/
 .next/
 .nuxt/
 .cache/
+*.tsbuildinfo
 
 # Strapi specific
 .tmp/

@@ -41,14 +41,10 @@ const nextConfig = {
       ],
     },
   ],
-  webpack: (config, { dev }) => {
+  webpack: (config) => {
     config.resolve.alias["@"] = path.resolve(process.cwd(), "src");
-    if (dev) {
-      config.cache = false;
-    }
     return config;
   },
 };
 
 export default nextConfig;
-

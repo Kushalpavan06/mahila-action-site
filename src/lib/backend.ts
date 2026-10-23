@@ -428,7 +428,8 @@ export function deleteSubmission(id: string) {
 // confirmation email, and is then mirrored locally (that mirror is what "My
 // Account" reads). These posts used to be wrapped in `if (BASE_URL)`, and
 // BASE_URL is always "" in the browser — Next only exposes NEXT_PUBLIC_* vars,
-// while .env sets VITE_API_URL. So nothing ever reached the server and no email
+// while the app used a separate frontend API URL. The Next.js app now uses
+// same-origin API routes by default, so nothing needs a separate Vite server.
 // was sent.
 
 /** What a public form submission reports back — `error` carries the server's own
