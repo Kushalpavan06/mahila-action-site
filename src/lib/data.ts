@@ -1,5 +1,6 @@
 import { api, BASE_URL } from "./api";
 import { comingSoon } from "./comingSoon";
+import contactJson from "../data/contact.json";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -234,14 +235,14 @@ export const DEFAULT_TIMELINE: TimelineEntry[] = [
 ];
 
 export const DEFAULT_CONTACT: ContactInfo = {
-  email: "contact@mahilaction.org",
-  emailNote: "We reply within 24 hours",
-  phone: "+91 XXXXXXXXXX",
-  phoneNote: "Mon – Sat, 9 AM – 6 PM IST",
-  address: "Hyderabad, Telangana",
-  addressNote: "India – 500 001",
-  hours: "Mon – Friday",
-  hoursNote: "9:00 AM – 5:30 PM IST",
+  email: contactJson.email || "contact@mahilaction.org",
+  emailNote: contactJson.emailNote || "We reply within 24 hours",
+  phone: contactJson.phone || "+91 XXXXXXXXXX",
+  phoneNote: contactJson.phoneNote || "Mon – Sat, 9 AM – 6 PM IST",
+  address: contactJson.address || "Hyderabad, Telangana",
+  addressNote: contactJson.addressNote || "India – 500 001",
+  hours: contactJson.hours || "Mon – Friday",
+  hoursNote: contactJson.hoursNote || "9:00 AM – 5:30 PM IST",
 };
 
 export const DEFAULT_SITE_DATA: SiteData = {
@@ -266,19 +267,41 @@ export function isWindowOpen(w: RegWindow, now = new Date()): boolean {
   return now >= start && now <= end;
 }
 
-/** An event is "open" if at least one of its enabled registration windows is currently open. */
+/**
+ * An event is open for general registration if it is upcoming (today or future).
+ * If the event date has already passed, it is closed.
+ * Specific registration windows (volunteer/vendor/donor) are evaluated when choosing roles.
+ */
 export function isEventOpen(ev: EventItem, now = new Date()): boolean {
-  const windows = Array.isArray(ev.windows) ? ev.windows : [];
-  return windows.some((w) => isWindowOpen(w, now));
+  if (!ev) return false;
+
+  // If the event itself has already occurred in the past, it is closed
+  if (ev.eventDate) {
+    const eventDate = new Date(ev.eventDate);
+    eventDate.setHours(23, 59, 59, 999);
+    if (!Number.isNaN(eventDate.getTime()) && eventDate < now) {
+      return false;
+    }
+  }
+
+  // Any upcoming event is available and open for general registration
+  return true;
 }
 
 /** Events whose registration hasn't started yet, or is currently open — used to populate the "next available" modal. */
 export function upcomingOrOpenEvents(events: EventItem[], now = new Date()): EventItem[] {
   return events
     .filter((ev) => {
+      if (ev.eventDate) {
+        const eventDate = new Date(ev.eventDate);
+        eventDate.setHours(23, 59, 59, 999);
+        if (!Number.isNaN(eventDate.getTime())) {
+          return eventDate >= now;
+        }
+      }
       const windows = Array.isArray(ev.windows) ? ev.windows : [];
       if (windows.length === 0) return true;
-      return windows.some((w) => w.enabled && new Date(w.regEnd) >= now) || (ev.eventDate && new Date(ev.eventDate) >= now);
+      return windows.some((w) => w.enabled && new Date(w.regEnd) >= now);
     })
     .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
 }

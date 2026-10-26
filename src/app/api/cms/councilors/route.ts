@@ -5,7 +5,7 @@ import { getAdminFromRequest } from "@/lib/auth";
 
 export async function GET() {
   try {
-    const result = await queryDb("SELECT * FROM cms_councilors ORDER BY order_index ASC");
+    const result = await queryDb("SELECT * FROM councilors ORDER BY order_index ASC");
     return NextResponse.json(
       result.rows.map((r: any) => ({
         ...r,
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     if (b.id && !isNaN(Number(b.id))) {
       await queryDb(
-        `INSERT INTO cms_councilors (id, name, role, bio, image, order_index)
+        `INSERT INTO councilors (id, name, role, bio, image, order_index)
          VALUES ($1, $2, $3, $4, $5, $6)
          ON CONFLICT(id) DO UPDATE SET name=EXCLUDED.name, role=EXCLUDED.role, bio=EXCLUDED.bio,
            image=EXCLUDED.image, order_index=EXCLUDED.order_index`,
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       );
     } else {
       const res = await queryDb(
-        `INSERT INTO cms_councilors (name, role, bio, image, order_index)
+        `INSERT INTO councilors (name, role, bio, image, order_index)
          VALUES ($1, $2, $3, $4, $5) RETURNING id`,
         [b.name, b.role || null, b.bio || null, b.image || null, orderIndex]
       );

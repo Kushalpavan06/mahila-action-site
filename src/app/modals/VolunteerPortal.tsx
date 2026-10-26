@@ -178,9 +178,15 @@ export function VolunteerPortal({ onClose, initialStep, resetToken, events, prom
     if (result.ok && result.profile) {
       setProfile(result.profile);
       saveUserSession(result.profile);
-      handleClose();
       toast.success(`Signed in successfully! Welcome back, ${result.profile.name}!`);
-      goAfterAuth();
+      const dest = consumeIntendedDestination();
+      if (dest) {
+        if (onClose) onClose();
+        navigate(dest);
+      } else {
+        handleClose();
+        navigate("/account");
+      }
       window.scrollTo({ top: 0 });
       return;
     }
@@ -206,9 +212,15 @@ export function VolunteerPortal({ onClose, initialStep, resetToken, events, prom
     }
     setProfile(result.profile);
     saveUserSession(result.profile);
-    handleClose();
     toast.success(`Registered successfully! Welcome, ${result.profile.name}!`);
-    goAfterAuth();
+    const dest = consumeIntendedDestination();
+    if (dest) {
+      if (onClose) onClose();
+      navigate(dest);
+    } else {
+      handleClose();
+      navigate("/account");
+    }
     window.scrollTo({ top: 0 });
   }
 

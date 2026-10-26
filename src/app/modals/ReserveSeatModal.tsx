@@ -261,7 +261,7 @@ export function AttendEventForm({
   const [companions, setCompanions] = useState<{ name: string; phone: string }[]>([]);
   const [submitted, setSubmitted] = useState(false);
 
-  const selectedEvent = events.find(ev => ev.id === eventId) ?? null;
+  const selectedEvent = events.find(ev => String(ev.id) === String(eventId)) ?? (defaultEventId ? events.find(ev => String(ev.id) === String(defaultEventId)) : null) ?? events[0] ?? null;
 
   function handleMembersChange(v: string) {
     setMembers(v);
@@ -405,7 +405,7 @@ export function AttendEventModal({ events, onClose }: { events: EventItem[]; onC
 // ── Standalone "Partner With Us" modal ────────────────────────────────────────
 export function PartnerWithUsModal({ events, onClose }: { events: EventItem[]; onClose: () => void }) {
   const [eventId, setEventId] = useState(events[0]?.id ?? "");
-  const selectedEvent = events.find(ev => ev.id === eventId) ?? events[0] ?? null;
+  const selectedEvent = events.find(ev => String(ev.id) === String(eventId)) ?? events[0] ?? null;
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">

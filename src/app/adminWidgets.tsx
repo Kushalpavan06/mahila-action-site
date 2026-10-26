@@ -3,44 +3,12 @@ import { Plus, Trash2, Pencil, X, ImagePlus, Crop, UploadCloud, Search } from "l
 import { ImageCropModal } from "./modals/ImageCropModal";
 import { Pagination } from "./components/ui/Pagination";
 import { usePagination } from "./hooks/usePagination";
+import { fileToDataUrl, urlToDataUrl, uploadMediaToDb } from "@/lib/media";
 
 export const inputBase =
   "w-full border border-[#a65a4a]/30 rounded-lg px-3 py-2 text-[14px] text-[#1e1e1e] focus:outline-none focus:border-[#a65a4a] font-['Inter',sans-serif] bg-white";
 export const labelBase =
   "font-['Inter',sans-serif] text-[11px] font-semibold text-[#1e1e1e]/50 uppercase tracking-wider block mb-1.5";
-
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-/**
- * Fetches a remote image URL and converts it to a data URL, so the crop modal
- * always works on same-origin data — this avoids the browser's canvas CORS
- * restriction that otherwise blocks cropping most externally-hosted images.
- * Returns null if the host doesn't allow cross-origin fetches (rare), in
- * which case the caller falls back to cropping the URL directly.
- */
-async function urlToDataUrl(url: string): Promise<string | null> {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const blob = await res.blob();
-    if (!blob.type.startsWith("image/")) return null;
-    return await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  } catch {
-    return null;
-  }
-}
 
 /** A single image field: paste a URL, or upload a file (stored as a data URL — no extra storage setup needed). */
 export function ImageField({
@@ -65,8 +33,8 @@ export function ImageField({
     if (!file.type.startsWith("image/")) return;
     setUploading(true);
     try {
-      const dataUrl = await fileToDataUrl(file);
-      onChange(dataUrl);
+      const url = await uploadMediaToDb(file);
+      onChange(url);
     } finally {
       setUploading(false);
     }
@@ -139,15 +107,16 @@ export function ImageField({
             type="text"
             value={safeVal.startsWith("data:") ? "" : safeVal}
             onChange={(e) => onChange(e.target.value)}
-            placeholder={safeVal.startsWith("data:") ? "(uploaded image)" : "Paste image URL or drag & drop file…"}
+            placeholder={safeVal.startsWith("data:") ? "(uploaded image)" : "Paste image URL (/api/media/…) or upload file"}
             className={inputBase}
           />
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#a65a4a]/30 text-[#a65a4a] text-[13px] font-medium hover:bg-[#a65a4a]/5 cursor-pointer transition-colors"
+            disabled={uploading}
+            className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#a65a4a]/30 text-[#a65a4a] text-[13px] font-medium hover:bg-[#a65a4a]/5 cursor-pointer transition-colors disabled:opacity-50"
           >
-            <ImagePlus size={14} /> {uploading ? "…" : "Upload"}
+            <ImagePlus size={14} /> {uploading ? "Saving…" : "Upload"}
           </button>
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
         </div>
@@ -162,11 +131,11 @@ export function ImageField({
             <button
               type="button"
               onClick={openCrop}
-              disabled={resolvingCrop}
+              disabled={resolvingCrop || uploading}
               className="absolute -top-1.5 -right-1.5 size-6 bg-[#a65a4a] text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-[#993925] disabled:opacity-60"
               title="Crop image"
             >
-              {resolvingCrop ? (
+              {resolvingCrop || uploading ? (
                 <svg className="animate-spin size-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
               ) : (
                 <Crop size={12} />
@@ -179,10 +148,16 @@ export function ImageField({
         <ImageCropModal
           src={cropSrc}
           onCancel={() => { setCropping(false); setCropSrc(null); }}
-          onConfirm={(cropped) => {
-            onChange(cropped);
+          onConfirm={async (cropped) => {
             setCropping(false);
             setCropSrc(null);
+            setUploading(true);
+            try {
+              const url = await uploadMediaToDb(cropped, "cropped-image.png");
+              onChange(url);
+            } finally {
+              setUploading(false);
+            }
           }}
         />
       )}
@@ -207,11 +182,18 @@ export function GalleryField({
   const [resolvingIndex, setResolvingIndex] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
+  const [uploading, setUploading] = useState(false);
+
   async function processFiles(files: File[]) {
     const imageFiles = files.filter((f) => f.type.startsWith("image/"));
     if (!imageFiles.length) return;
-    const dataUrls = await Promise.all(imageFiles.map(fileToDataUrl));
-    onChange([...value, ...dataUrls]);
+    setUploading(true);
+    try {
+      const uploaded = await Promise.all(imageFiles.map((f) => uploadMediaToDb(f)));
+      onChange([...value, ...uploaded]);
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
@@ -284,7 +266,7 @@ export function GalleryField({
               <button
                 type="button"
                 onClick={() => openCrop(i)}
-                disabled={resolvingIndex === i}
+                disabled={resolvingIndex === i || uploading}
                 className="absolute -top-1.5 -left-1.5 size-5 bg-white text-[#a65a4a] border border-[#a65a4a]/40 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#a65a4a] hover:text-white disabled:opacity-60"
                 title="Crop image"
               >
@@ -309,7 +291,7 @@ export function GalleryField({
             type="text"
             value={urlDraft}
             onChange={(e) => setUrlDraft(e.target.value)}
-            placeholder="Paste image URL or drag & drop image files…"
+            placeholder="Paste image URL (/api/media/…) or upload image files…"
             className={inputBase}
           />
           <button
@@ -326,9 +308,10 @@ export function GalleryField({
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#a65a4a]/30 text-[#a65a4a] text-[13px] font-medium hover:bg-[#a65a4a]/5 cursor-pointer"
+            disabled={uploading}
+            className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#a65a4a]/30 text-[#a65a4a] text-[13px] font-medium hover:bg-[#a65a4a]/5 cursor-pointer disabled:opacity-50"
           >
-            <ImagePlus size={14} /> Upload
+            <ImagePlus size={14} /> {uploading ? "Uploading…" : "Upload"}
           </button>
           <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFiles} />
         </div>
@@ -337,10 +320,18 @@ export function GalleryField({
         <ImageCropModal
           src={cropSrc}
           onCancel={() => { setCropIndex(null); setCropSrc(null); }}
-          onConfirm={(cropped) => {
-            onChange(value.map((v, idx) => (idx === cropIndex ? cropped : v)));
+          onConfirm={async (cropped) => {
+            const targetIndex = cropIndex;
             setCropIndex(null);
             setCropSrc(null);
+            if (targetIndex === null) return;
+            setUploading(true);
+            try {
+              const url = await uploadMediaToDb(cropped, "gallery-cropped.png");
+              onChange(value.map((v, idx) => (idx === targetIndex ? url : v)));
+            } finally {
+              setUploading(false);
+            }
           }}
         />
       )}

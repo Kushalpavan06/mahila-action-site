@@ -9,7 +9,7 @@ export function generateStaticParams() {
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const res = await queryDb("SELECT * FROM cms_timeline WHERE id = $1", [id]);
+    const res = await queryDb("SELECT * FROM timeline WHERE id = $1", [id]);
     if (res.rows.length === 0) {
       return NextResponse.json({ error: "Timeline item not found" }, { status: 404 });
     }
@@ -38,7 +38,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const orderIndex = b.order !== undefined || b.order_index !== undefined ? Number(b.order ?? b.order_index) : undefined;
 
     const res = await queryDb(
-      `UPDATE cms_timeline SET
+      `UPDATE timeline SET
          year = COALESCE($1, year),
          title = COALESCE($2, title),
          description = COALESCE($3, description),
@@ -69,7 +69,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   try {
     const { id } = await params;
-    const res = await queryDb("DELETE FROM cms_timeline WHERE id = $1 RETURNING id", [id]);
+    const res = await queryDb("DELETE FROM timeline WHERE id = $1 RETURNING id", [id]);
     if (res.rows.length === 0) {
       return NextResponse.json({ error: "Timeline item not found" }, { status: 404 });
     }

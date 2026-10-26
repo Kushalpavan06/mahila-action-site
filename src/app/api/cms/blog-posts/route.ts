@@ -9,8 +9,8 @@ export async function GET(req: NextRequest) {
     const section = searchParams.get("section");
 
     const result = section
-      ? await queryDb("SELECT * FROM cms_blog_posts WHERE section = $1 ORDER BY created_at DESC", [section])
-      : await queryDb("SELECT * FROM cms_blog_posts ORDER BY created_at DESC");
+      ? await queryDb("SELECT * FROM blog_posts WHERE section = $1 ORDER BY created_at DESC", [section])
+      : await queryDb("SELECT * FROM blog_posts ORDER BY created_at DESC");
 
     return NextResponse.json(
       result.rows.map((r: any) => ({
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
 
     if (b.id && !isNaN(Number(b.id))) {
       await queryDb(
-        `INSERT INTO cms_blog_posts (id, section, category_id, title, excerpt, content, cover_image, gallery, tags)
+        `INSERT INTO blog_posts (id, section, category_id, title, excerpt, content, cover_image, gallery, tags)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
          ON CONFLICT(id) DO UPDATE SET section=EXCLUDED.section, category_id=EXCLUDED.category_id, title=EXCLUDED.title,
            excerpt=EXCLUDED.excerpt, content=EXCLUDED.content, cover_image=EXCLUDED.cover_image,
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       );
     } else {
       const res = await queryDb(
-        `INSERT INTO cms_blog_posts (section, category_id, title, excerpt, content, cover_image, gallery, tags)
+        `INSERT INTO blog_posts (section, category_id, title, excerpt, content, cover_image, gallery, tags)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
         [
           b.section || "story",

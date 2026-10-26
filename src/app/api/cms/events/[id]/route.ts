@@ -9,7 +9,7 @@ export function generateStaticParams() {
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const res = await queryDb("SELECT * FROM cms_events WHERE id = $1", [id]);
+    const res = await queryDb("SELECT * FROM events WHERE id = $1", [id]);
     if (res.rows.length === 0) {
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
     }
@@ -47,7 +47,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const categoryId = b.categoryId !== undefined || b.category_id !== undefined ? (b.categoryId || b.category_id ? Number(b.categoryId || b.category_id) : null) : undefined;
 
     const res = await queryDb(
-      `UPDATE cms_events SET
+      `UPDATE events SET
          title = COALESCE($1, title),
          description = COALESCE($2, description),
          image = COALESCE($3, image),
@@ -86,13 +86,13 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const isNum = /^\d+$/.test(targetId);
     let res;
     if (isNum) {
-      res = await queryDb("DELETE FROM cms_events WHERE id = $1 RETURNING id", [parseInt(targetId, 10)]);
+      res = await queryDb("DELETE FROM events WHERE id = $1 RETURNING id", [parseInt(targetId, 10)]);
     } else {
       const rawNum = targetId.replace(/^evt_/, "");
       if (/^\d+$/.test(rawNum)) {
-        res = await queryDb("DELETE FROM cms_events WHERE id = $1 RETURNING id", [parseInt(rawNum, 10)]);
+        res = await queryDb("DELETE FROM events WHERE id = $1 RETURNING id", [parseInt(rawNum, 10)]);
       } else {
-        res = await queryDb("DELETE FROM cms_events WHERE id::text = $1 RETURNING id", [targetId]);
+        res = await queryDb("DELETE FROM events WHERE id::text = $1 RETURNING id", [targetId]);
       }
     }
     return NextResponse.json({ ok: true, id: targetId });

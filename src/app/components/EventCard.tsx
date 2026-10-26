@@ -47,11 +47,11 @@ export function EventCard({
               <span className="absolute inline-flex size-full rounded-full bg-red-500 animate-ping" />
               <span className="relative inline-flex size-1.5 rounded-full bg-red-500" />
             </span>
-            {event.totalSeats} Seats — Open
+            {event.totalSeats ? `${event.totalSeats} Seats — Open` : "Open"}
           </span>
         ) : (
           <span className={`${inter()} bg-[#1e1e1e]/50 border-2 border-[#f4efe7]/30 text-[#f4efe7] text-[10px] font-semibold px-4 py-1 rounded-full whitespace-nowrap`}>
-            Closed
+            Past Event
           </span>
         )}
       </div>
@@ -77,7 +77,7 @@ export function EventCard({
                 : "border border-[#f4efe7]/60 text-[#f4efe7] hover:bg-[#f4efe7]/10"
             }`}
           >
-            {open ? "Reserve Your Seat" : "See Registration Dates"}
+            {open ? "Register for Event" : "Past Event"}
           </button>
         )}
       </div>

@@ -39,7 +39,3 @@ Thumbs.db
 
 # Local Netlify folder
 .netlify
-
-# Local SQLite databases
-src/data/*.db*
-*.db

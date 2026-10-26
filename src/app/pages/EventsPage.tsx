@@ -53,7 +53,7 @@ export function EventsPage() {
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   function handleReserve(ev: EventItem) {
-    if (isEventOpen(ev)) openModal("reserve", { id: ev.id });
+    if (isEventOpen(ev)) openModal("reserve", { id: String(ev.id) });
     else openModal("closed");
   }
 

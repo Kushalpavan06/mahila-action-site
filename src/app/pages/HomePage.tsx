@@ -282,7 +282,7 @@ export function HomePage({ setPage }: { setPage: (p: Page) => void }) {
                 disabled={!featuredEvent}
                 className={`${inter()} bg-[#a65a4a] text-[#f4efe7] text-[17px] font-semibold px-10 py-4 rounded-full hover:bg-[#993925] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                {eventOpen ? "Reserve Your Seat" : "See Upcoming Events"}
+                {eventOpen ? "Register for Event" : "See Upcoming Events"}
               </button>
               <button
                 onClick={() => goToPage("eventsBlog")}
@@ -298,7 +298,15 @@ export function HomePage({ setPage }: { setPage: (p: Page) => void }) {
                 ariaLabel="Upcoming events"
                 onSelect={handleEventSelect}
                 slides={railEvents.map((ev) => (
-                  <EventCard key={ev.id} event={ev} categoryName={categoryName(ev.categoryId)} />
+                  <EventCard
+                    key={ev.id}
+                    event={ev}
+                    categoryName={categoryName(ev.categoryId)}
+                    onReserve={(targetEv) => {
+                      if (isEventOpen(targetEv)) openModal("reserve", { id: String(targetEv.id) });
+                      else openModal("closed");
+                    }}
+                  />
                 ))}
               />
             </div>

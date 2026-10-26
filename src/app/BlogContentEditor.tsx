@@ -16,19 +16,11 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { ImageCropModal } from "./modals/ImageCropModal";
+import { fileToDataUrl, uploadMediaToDb } from "@/lib/media";
 
 // ─────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────
-
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
 
 function escapeHtml(s: string) {
   return s
@@ -154,8 +146,8 @@ export function BlogContentEditor({
       setCropTarget({ src: dataUrl, forImg: null });
     } else if (files.length > 1) {
       for (const file of files) {
-        const dataUrl = await fileToDataUrl(file);
-        insertImageHtml(dataUrl);
+        const url = await uploadMediaToDb(file);
+        insertImageHtml(url);
       }
     }
   }
@@ -232,13 +224,14 @@ export function BlogContentEditor({
     }
   }
 
-  function handleCropConfirm(croppedDataUrl: string) {
+  async function handleCropConfirm(croppedDataUrl: string) {
+    const savedUrl = await uploadMediaToDb(croppedDataUrl, "story-image.png");
     if (cropTarget?.forImg) {
       // Re-cropping an image already placed in the content — update it in place.
-      cropTarget.forImg.src = croppedDataUrl;
+      cropTarget.forImg.src = savedUrl;
       emitChange();
     } else {
-      insertImageHtml(croppedDataUrl);
+      insertImageHtml(savedUrl);
     }
     setCropTarget(null);
   }

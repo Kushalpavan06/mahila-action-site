@@ -5,7 +5,7 @@ import { getAdminFromRequest } from "@/lib/auth";
 
 export async function GET() {
   try {
-    const result = await queryDb("SELECT * FROM cms_categories ORDER BY name ASC");
+    const result = await queryDb("SELECT * FROM categories ORDER BY name ASC");
     return NextResponse.json(result.rows, {
       headers: {
         "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120",
@@ -27,13 +27,13 @@ export async function POST(req: NextRequest) {
 
     if (b.id && !isNaN(Number(b.id))) {
       await queryDb(
-        `INSERT INTO cms_categories (id, name) VALUES ($1, $2)
+        `INSERT INTO categories (id, name) VALUES ($1, $2)
          ON CONFLICT(id) DO UPDATE SET name = EXCLUDED.name`,
         [Number(b.id), b.name]
       );
     } else {
       const res = await queryDb(
-        `INSERT INTO cms_categories (name) VALUES ($1)
+        `INSERT INTO categories (name) VALUES ($1)
          ON CONFLICT(name) DO UPDATE SET name = EXCLUDED.name RETURNING id`,
         [b.name]
       );

@@ -38,12 +38,11 @@ async function main() {
     const pool = await getPool();
     const counts = await Promise.all([
       pool.query("SELECT COUNT(*) as count FROM users;"),
-      pool.query("SELECT COUNT(*) as count FROM cms_categories;"),
-      pool.query("SELECT COUNT(*) as count FROM cms_events;"),
-      pool.query("SELECT COUNT(*) as count FROM cms_blog_posts;"),
-      pool.query("SELECT COUNT(*) as count FROM cms_councilors;"),
-      pool.query("SELECT COUNT(*) as count FROM cms_timeline;"),
-      pool.query("SELECT COUNT(*) as count FROM cms_contact;"),
+      pool.query("SELECT COUNT(*) as count FROM categories;"),
+      pool.query("SELECT COUNT(*) as count FROM events;"),
+      pool.query("SELECT COUNT(*) as count FROM blog_posts;"),
+      pool.query("SELECT COUNT(*) as count FROM councilors;"),
+      pool.query("SELECT COUNT(*) as count FROM timeline;"),
     ]).catch(() => []);
 
     const getCount = (res: any) => res?.rows?.[0]?.count ?? res?.rows?.[0]?.["COUNT(*)"] ?? 0;
@@ -58,7 +57,7 @@ async function main() {
       console.log(`Blog Posts:     ${getCount(counts[3])}`);
       console.log(`Councilors:     ${getCount(counts[4])}`);
       console.log(`Timeline:       ${getCount(counts[5])}`);
-      console.log(`Contact Record: ${getCount(counts[6])}`);
+      console.log(`Contact Info:   Stored in JSON format (src/data/contact.json)`);
       console.log("==================================================\n");
     }
 

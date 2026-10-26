@@ -5,7 +5,7 @@ import { getAdminFromRequest } from "@/lib/auth";
 
 export async function GET() {
   try {
-    const result = await queryDb("SELECT * FROM cms_timeline ORDER BY order_index ASC");
+    const result = await queryDb("SELECT * FROM timeline ORDER BY order_index ASC");
     return NextResponse.json(
       result.rows.map((r: any) => ({
         ...r,
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     if (b.id && !isNaN(Number(b.id))) {
       await queryDb(
-        `INSERT INTO cms_timeline (id, year, title, description, image, order_index)
+        `INSERT INTO timeline (id, year, title, description, image, order_index)
          VALUES ($1, $2, $3, $4, $5, $6)
          ON CONFLICT(id) DO UPDATE SET year=EXCLUDED.year, title=EXCLUDED.title, description=EXCLUDED.description,
            image=EXCLUDED.image, order_index=EXCLUDED.order_index`,
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       );
     } else {
       const res = await queryDb(
-        `INSERT INTO cms_timeline (year, title, description, image, order_index)
+        `INSERT INTO timeline (year, title, description, image, order_index)
          VALUES ($1, $2, $3, $4, $5) RETURNING id`,
         [b.year, b.title, b.description || null, b.image || null, orderIndex]
       );

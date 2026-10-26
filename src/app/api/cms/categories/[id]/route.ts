@@ -9,7 +9,7 @@ export function generateStaticParams() {
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const res = await queryDb("SELECT * FROM cms_categories WHERE id = $1", [id]);
+    const res = await queryDb("SELECT * FROM categories WHERE id = $1", [id]);
     if (res.rows.length === 0) {
       return NextResponse.json({ error: "Category not found" }, { status: 404 });
     }
@@ -34,7 +34,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     const res = await queryDb(
-      "UPDATE cms_categories SET name = $1 WHERE id = $2 RETURNING *",
+      "UPDATE categories SET name = $1 WHERE id = $2 RETURNING *",
       [name.trim(), id]
     );
 
@@ -59,7 +59,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   try {
     const { id } = await params;
-    const res = await queryDb("DELETE FROM cms_categories WHERE id = $1 RETURNING id", [id]);
+    const res = await queryDb("DELETE FROM categories WHERE id = $1 RETURNING id", [id]);
     if (res.rows.length === 0) {
       return NextResponse.json({ error: "Category not found" }, { status: 404 });
     }

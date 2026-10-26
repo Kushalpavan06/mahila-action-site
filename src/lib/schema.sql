@@ -19,14 +19,14 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- 2. CMS Categories
-CREATE TABLE IF NOT EXISTS cms_categories (
+CREATE TABLE IF NOT EXISTS categories (
   id SERIAL PRIMARY KEY,
   name TEXT UNIQUE NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- 3. CMS Events
-CREATE TABLE IF NOT EXISTS cms_events (
+CREATE TABLE IF NOT EXISTS events (
   id SERIAL PRIMARY KEY,
   title TEXT NOT NULL,
   description TEXT,
@@ -36,15 +36,15 @@ CREATE TABLE IF NOT EXISTS cms_events (
   total_seats INTEGER DEFAULT 0,
   max_volunteers INTEGER DEFAULT 0,
   windows TEXT NOT NULL,
-  category_id INTEGER REFERENCES cms_categories(id) ON DELETE SET NULL,
+  category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- 4. CMS Blog posts & Impact Stories
-CREATE TABLE IF NOT EXISTS cms_blog_posts (
+CREATE TABLE IF NOT EXISTS blog_posts (
   id SERIAL PRIMARY KEY,
   section TEXT NOT NULL,
-  category_id INTEGER REFERENCES cms_categories(id) ON DELETE SET NULL,
+  category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
   title TEXT NOT NULL,
   excerpt TEXT,
   content TEXT,
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS cms_blog_posts (
 );
 
 -- 5. CMS Councilors
-CREATE TABLE IF NOT EXISTS cms_councilors (
+CREATE TABLE IF NOT EXISTS councilors (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
   role TEXT,
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS cms_councilors (
 );
 
 -- 6. CMS Timeline
-CREATE TABLE IF NOT EXISTS cms_timeline (
+CREATE TABLE IF NOT EXISTS timeline (
   id SERIAL PRIMARY KEY,
   year TEXT NOT NULL,
   title TEXT NOT NULL,
@@ -74,18 +74,6 @@ CREATE TABLE IF NOT EXISTS cms_timeline (
   order_index INTEGER DEFAULT 0
 );
 
--- 7. CMS Contact settings
-CREATE TABLE IF NOT EXISTS cms_contact (
-  id SERIAL PRIMARY KEY,
-  email TEXT,
-  email_note TEXT,
-  phone TEXT,
-  phone_note TEXT,
-  address TEXT,
-  address_note TEXT,
-  hours TEXT,
-  hours_note TEXT
-);
 
 -- 8. Donations table
 CREATE TABLE IF NOT EXISTS donations (
@@ -176,8 +164,20 @@ CREATE INDEX IF NOT EXISTS recycle_bin_deleted_at_idx ON recycle_bin (deleted_at
 
 -- 15. Performance Indexes for Low-Latency Lookups
 CREATE INDEX IF NOT EXISTS users_role_status_idx ON users (role, status);
-CREATE INDEX IF NOT EXISTS cms_blog_posts_section_cat_idx ON cms_blog_posts (section, category_id, created_at);
-CREATE INDEX IF NOT EXISTS cms_events_date_cat_idx ON cms_events (event_date, category_id);
+CREATE INDEX IF NOT EXISTS blog_posts_section_cat_idx ON blog_posts (section, category_id, created_at);
+CREATE INDEX IF NOT EXISTS events_date_cat_idx ON events (event_date, category_id);
 CREATE INDEX IF NOT EXISTS donations_status_created_idx ON donations (status, created_at);
 CREATE INDEX IF NOT EXISTS event_reservations_status_created_idx ON event_reservations (status, created_at);
+
+-- 16. Media & Images Table (binary BYTEA storage)
+CREATE TABLE IF NOT EXISTS media (
+  id SERIAL PRIMARY KEY,
+  filename TEXT NOT NULL,
+  mime_type TEXT NOT NULL,
+  byte_size INTEGER NOT NULL,
+  data BYTEA NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS media_created_at_idx ON media (created_at DESC);
 

@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       // Look up max_volunteers for this event in the CMS. If set (> 0), count
       // current volunteer sign-ups and block if the cap is already reached.
       const eventRow = await queryDb(
-        "SELECT max_volunteers FROM cms_events WHERE LOWER(title) = LOWER($1) LIMIT 1",
+        "SELECT max_volunteers FROM events WHERE LOWER(title) = LOWER($1) LIMIT 1",
         [evt.trim()]
       );
       const maxVol = Number(eventRow.rows[0]?.max_volunteers ?? 0);
